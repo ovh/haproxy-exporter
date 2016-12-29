@@ -1,0 +1,59 @@
+loopDuration: 30000
+maxConcurrent: 30
+
+sources:
+  - uri: http://127.0.0.1:8082/csv
+    labels:
+      iplb : 3758779
+      slot : 1202
+      socket : 0
+  - uri: http://127.0.0.1:8083/csv
+    labels:
+      iplb : 3758779
+      slot : 1202
+      socket : 1
+  - uri: http://127.0.0.1:8084/csv
+    labels:
+      iplb : 3758779
+      slot : 1202
+      socket : 2
+  - uri: http://127.0.0.1:8085/csv
+    labels:
+      iplb : 3758779
+      slot : 1202
+      socket : 3
+
+metrics:
+  - qcur
+  - qmax
+  - scur
+  - smax
+  - slim
+  - stot
+  - bin
+  - bout
+  - dreq
+  - dresp
+  - ereq
+  - econ
+  - eresp
+  - wretr
+  - wredis
+  - chkfail
+  - chkdown
+  - downtime
+  - qlimit
+  - rate
+  - rate_lim
+  - rate_max
+  - hrsp_1xx
+  - hrsp_2xx
+  - hrsp_3xx
+  - hrsp_4xx
+  - hrsp_5xx
+  - hrsp_other
+  - req_rate
+  - req_rate_max
+  - req_tot
+  - cli_abrt
+  - srv_abrt
