@@ -1,4 +1,4 @@
-package: stash.ovh.net/metrics/haproxy-exporter
+package: github.com/runabove/haproxy-exporter
 import:
 - package: github.com/Sirupsen/logrus
   version: ^0.11.0
