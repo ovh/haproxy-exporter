@@ -1,5 +1,6 @@
-# HAProxy-Exporter - Export HAProxy stats as Sensision Metrics
-[![version](https://img.shields.io/badge/status-alpha-orange.svg)](https://github.com/runabove/beamium)
+# HAProxy-Exporter - HAProxy stats to Sensision Metrics
+[![Build Status](https://travis-ci.org/runabove/haproxy-exporter.svg?branch=master)](https://travis-ci.org/runabove/haproxy-exporter)
+
 HAProxy-Exporter scrapes HAProxy stats and expose them as a Sensision HTTP endpoint.
 
 HAProxy-Exporter features:
