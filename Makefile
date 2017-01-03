@@ -1,16 +1,16 @@
 AGENTS=api scheduler aggregator worker
-ROOT_DIR=github.com/runabove/haproxy-exporter
 BUILD_DIR=build
 
 CC=go build
-CFLAGS=-race
+GITHASH=$(shell git rev-parse HEAD)
+CFLAGS=-race -ldflags "-X github.com/runabove/haproxy-exporter/cmd.githash=$(GITHASH)"
 
 rwildcard=$(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2) $(filter $(subst *,%,$2),$d))
 VPATH= $(BUILD_DIR)
 
 .SECONDEXPANSION:
 
-build: haproxy-exporter.go $$(call rwildcard, $(ROOT_DIR)/cmd, *.go) $$(call rwildcard, $(ROOT_DIR)/core, *.go)
+build: haproxy-exporter.go $$(call rwildcard, ./cmd, *.go) $$(call rwildcard, ./core, *.go)
 	$(CC) $(CFLAGS) -o $(BUILD_DIR)/haproxy-exporter haproxy-exporter.go
 
 .PHONY: lint
