@@ -1,27 +1,5 @@
-loopDuration: 30000
-maxConcurrent: 30
-
 sources:
-  - uri: http://127.0.0.1:8082/csv
-    labels:
-      iplb : 3758779
-      slot : 1202
-      socket : 0
-  - uri: http://127.0.0.1:8083/csv
-    labels:
-      iplb : 3758779
-      slot : 1202
-      socket : 1
-  - uri: http://127.0.0.1:8084/csv
-    labels:
-      iplb : 3758779
-      slot : 1202
-      socket : 2
-  - uri: http://127.0.0.1:8085/csv
-    labels:
-      iplb : 3758779
-      slot : 1202
-      socket : 3
+  - uri: unix:/run/haproxy/admin.sock
 
 metrics:
   - qcur

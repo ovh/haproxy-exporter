@@ -1,69 +1,39 @@
 package core
 
 import (
-	"io"
+	"bytes"
+	"fmt"
+	"math"
 	"sync"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/viper"
 )
 
 // Beamer support HAProxy stats collection
 type Beamer struct {
-	URI   string
-	mutex sync.RWMutex
-	fetch func() (io.ReadCloser, error)
+	mutex  sync.RWMutex
+	labels string
 
-	up                             prometheus.Gauge
-	totalScrapes, csvParseFailures prometheus.Counter
-	metrics                        map[int]*prometheus.GaugeVec
+	scrapeCounter  int64
+	scrapeSkiped   int64
+	scrapeFailures int64
 }
 
-func NewBeamer(exporters []*Exporter, registry *prometheus.Registry) {
-	duration := viper.GetInt("loopDuration")
-	ticker := time.NewTicker(time.Duration(duration/len(exporters)) * time.Millisecond)
-  running := make(chan struct{}, viper.GetInt("maxConcurrent"))
-	quickStart := make(chan struct{})
+// NewBeamer create a beamer
+func NewBeamer(exporters []*Exporter, labels map[string]string) *Beamer {
+	delta := viper.GetInt("scanDuration") / len(exporters)
+	p := math.Max(float64(delta), 1)
+	ticker := time.NewTicker(time.Duration(p) * time.Millisecond)
+	running := make(chan struct{}, viper.GetInt("maxConcurrent"))
 	i := 0
 
-	scrapeCounter := prometheus.NewCounter(prometheus.CounterOpts{
-		Namespace: "haproxy",
-		Subsystem: "exporter",
-		Name:      "scrape",
-		Help:      "Number of HAProxy scrape done.",
-	})
-	registry.MustRegister(scrapeCounter)
-
-	scrapeSkiped := prometheus.NewCounter(prometheus.CounterOpts{
-		Namespace: "haproxy",
-		Subsystem: "exporter",
-		Name:      "scrape_skiped",
-		Help:      "Number of scrape skiped.",
-	})
-	registry.MustRegister(scrapeSkiped)
-
-	scrapeFailures := prometheus.NewCounter(prometheus.CounterOpts{
-		Namespace: "haproxy",
-		Subsystem: "exporter",
-		Name:      "scrape_failures",
-		Help:      "Number of scrape failures.",
-	})
-	registry.MustRegister(scrapeFailures)
-
-	parseFailures := prometheus.NewCounter(prometheus.CounterOpts{
-		Namespace: "haproxy",
-		Subsystem: "exporter",
-		Name:      "parse_failures",
-		Help:      "Number of errors while parsing CSV.",
-	})
-	registry.MustRegister(parseFailures)
+	b := &Beamer{}
 
 	go func() {
 		for {
 			select {
-      case <-quickStart: // FIXME
 			case <-ticker.C:
 				select {
 				case running <- struct{}{}:
@@ -72,27 +42,53 @@ func NewBeamer(exporters []*Exporter, registry *prometheus.Registry) {
 							<-running
 						}()
 						e := exporters[i]
-						res := e.Scrape()
-						if res > 0 {
-							parseFailures.Add(float64(res))
-							log.Warnf("Parse doomed for", e.URI)
-						} else if res < 0 {
-							scrapeFailures.Inc()
-							log.Errorf("Scrape fail for", e.URI)
+						success := e.Scrape()
+
+						b.mutex.Lock()
+
+						if !success {
+							b.scrapeFailures++
+							log.Errorf("Scrape fail for %v", e.URI)
 						}
+						b.mutex.Unlock()
 					}()
 
-					scrapeCounter.Inc()
+					b.scrapeCounter++
 					i++
 					if i >= len(exporters) {
 						i = 0
 					}
 				default:
-					scrapeSkiped.Inc()
+					b.mutex.Lock()
+					b.scrapeSkiped++
+					b.mutex.Unlock()
 				}
 			}
 		}
 	}()
 
-  quickStart <- struct{}{}
+	for k := range labels {
+		if len(b.labels) > 0 {
+			b.labels += ","
+		}
+		b.labels += k + "=" + labels[k]
+	}
+
+	return b
+}
+
+// Metrics delivers beamer stats as warp10 metrics.
+func (b *Beamer) Metrics() *bytes.Buffer {
+	b.mutex.RLock()
+	defer b.mutex.RUnlock()
+
+	var buf bytes.Buffer
+
+	head := fmt.Sprintf("%v// haproxy.exporter.", time.Now().UnixNano()/1000)
+
+	buf.WriteString(fmt.Sprintf("%vscrape{%v} %v\n", head, b.labels, b.scrapeCounter))
+	buf.WriteString(fmt.Sprintf("%vscrape_skiped{%v} %v\n", head, b.labels, b.scrapeSkiped))
+	buf.WriteString(fmt.Sprintf("%vscrape_failures{%v} %v\n", head, b.labels, b.scrapeFailures))
+
+	return &buf
 }

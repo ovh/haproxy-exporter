@@ -12,7 +12,7 @@ package main
 import (
 	log "github.com/Sirupsen/logrus"
 
-	"stash.ovh.net/metrics/haproxy-exporter/cmd"
+	"github.com/runabove/haproxy-exporter/cmd"
 )
 
 func main() {

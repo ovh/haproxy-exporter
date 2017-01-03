@@ -1,5 +1,5 @@
-hash: 43ba5a6160150c9df082f37ae7aeb8518984bffb100046e5b1d98f2f3c0677df
-updated: 2016-12-29T08:15:12.501394775-05:00
+hash: 8e8e9f0bb2da374292a2e9bbaa20127befcae3d341c1be6a3388804db454f01a
+updated: 2016-12-29T17:26:15.041460725-05:00
 imports:
 - name: github.com/beorn7/perks
   version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
@@ -11,6 +11,8 @@ imports:
   version: 8ee79997227bf9b34611aee7946ae64735e6fd93
   subpackages:
   - proto
+- name: github.com/gwenn/yacr
+  version: 67f7471b9d0ac6ab53456b3892af9d91a7b18330
 - name: github.com/hashicorp/hcl
   version: 37ab263305aaeb501a60eb16863e808d426e37f2
   subpackages:

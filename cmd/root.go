@@ -2,18 +2,15 @@ package cmd
 
 import (
 	"fmt"
-	"bytes"
+	"os"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/prometheus/client_golang/prometheus"
-	// "github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"net/http"
 
-	"github.com/prometheus/common/expfmt"
-	"stash.ovh.net/metrics/haproxy-exporter/core"
+	"github.com/runabove/haproxy-exporter/core"
 )
 
 var cfgFile string
@@ -36,8 +33,10 @@ func initConfig() {
 	}
 
 	// Defaults
-	viper.SetDefault("loopDuration", 1000)
+	viper.SetDefault("scanDuration", 1000)
+	viper.SetDefault("scrapeTimeout", 5000)
 	viper.SetDefault("maxConcurrent", 50)
+	viper.SetDefault("flushPeriod", 10000)
 
 	// Bind environment variables
 	viper.SetEnvPrefix("haexport")
@@ -48,13 +47,13 @@ func initConfig() {
 	viper.AddConfigPath("$HOME/.haproxy-exporter")
 	viper.AddConfigPath(".")
 
-	// Load default config
-	viper.SetConfigName("default")
+	// Load config
+	viper.SetConfigName("config")
 	if err := viper.MergeInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			log.Debug("No default config file found")
+			log.Debug("No config file found")
 		} else {
-			log.Panicf("Fatal error in default config file: %v \n", err)
+			log.Panicf("Fatal error in config file: %v \n", err)
 		}
 	}
 
@@ -68,6 +67,7 @@ func initConfig() {
 	}
 }
 
+// Source defined a HAProxy stats source
 type Source struct {
 	URI    string
 	Labels map[string]interface{}
@@ -80,71 +80,52 @@ var RootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Info("HAProxy exporter starting")
 
-		// Custom reporter (drop go* metrics)
-		var registry = prometheus.NewRegistry()
-
 		// Load sources
 		var sources []Source
 		if err := viper.UnmarshalKey("sources", &sources); err != nil {
-			log.Fatal("Unable to decode 'sources', %v", err)
+			log.Fatalf("Unable to decode 'sources', %v", err)
+		}
+
+		log.Info(sources)
+		if len(sources) == 0 {
+			log.Fatal("No sources defined, dying")
 		}
 
 		// Build exporters
-		var godMode = 200
-		exporters := make([]*core.Exporter, len(sources) * godMode)
+		exporters := make([]*core.Exporter, len(sources))
 
-		for i, _ := range exporters {
-			s := sources[i%len(sources)]
+		for i := range exporters {
+			s := sources[i]
 			// Setup labels
 			labels := make(map[string]string)
-			labels["i"] = fmt.Sprintf("%v", i)
 			for k, v := range s.Labels {
 				labels[k] = fmt.Sprintf("%v", v)
 			}
+			for k, v := range viper.GetStringMapString("labels") {
+				labels[k] = fmt.Sprintf("%v", v)
+			}
 
-			exporter, err := core.NewExporter(s.URI, 5*time.Second, labels) // FIXME
+			exporter, err := core.NewExporter(s.URI,
+				time.Duration(viper.GetInt("scrapeTimeout"))*time.Millisecond,
+				labels,
+				viper.GetStringSlice("metrics"))
 			if err != nil {
 				log.Fatal(err)
 			}
-			// registry.MustRegister(exporter) FIXME
 			exporters[i] = exporter
 		}
+		log.Infof("Exporters started - %v", len(exporters))
 
 		// Start beamer
-		core.NewBeamer(exporters, registry)
+		b := core.NewBeamer(exporters, viper.GetStringMapString("labels"))
+		log.Infof("Beamer started")
 
-		// Setup http routing
-		// http.Handle("/metrics", promhttp.HandlerFor(registry, promhttp.HandlerOpts{
-		// 	ErrorLog:           nil,
-		// 	ErrorHandling:      promhttp.ContinueOnError,
-		// 	DisableCompression: false,
-		// }))
+		// Setup http
 		http.Handle("/metrics", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			mfs, err := registry.Gather()
-			if err != nil {
-				return
-			}
-
-			contentType := expfmt.Negotiate(req.Header)
-			var buf bytes.Buffer
-			enc := expfmt.NewEncoder(&buf, contentType)
-			var lastErr error
-			for _, mf := range mfs {
-				enc.Encode(mf)
-			}
-			if lastErr != nil && buf.Len() == 0 {
-				http.Error(w, "No metrics encoded, last error:\n\n"+err.Error(), http.StatusInternalServerError)
-				return
-			}
-			header := w.Header()
-			header.Set("Content-Type", string(contentType))
-
-
+			w.Write(b.Metrics().Bytes())
 			for _, e := range exporters {
 				w.Write(e.Metrics().Bytes())
 			}
-			w.Write(buf.Bytes())
-
 		}))
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte(`<html>
@@ -155,20 +136,35 @@ var RootCmd = &cobra.Command{
 	             </body>
 	             </html>`))
 		})
+		log.Infof("Http started")
+
+		if viper.IsSet("flushPath") {
+			flushPath := viper.GetString("flushPath")
+			ticker := time.NewTicker(time.Duration(viper.GetInt("flushPeriod")) * time.Millisecond)
+			go func() {
+				for {
+					select {
+					case <-ticker.C:
+						path := fmt.Sprintf("%v%v%v", flushPath, time.Now().Unix(), ".metrics")
+						log.Debugf("Flush to file: %v", path)
+						file, err := os.Create(path)
+						if err != nil {
+							log.Errorf("Flush failed: %v", err)
+						}
+
+						file.Write(b.Metrics().Bytes())
+						for _, e := range exporters {
+							file.Write(e.Metrics().Bytes())
+						}
+
+						file.Close()
+					}
+				}
+			}()
+			log.Infof("Flush routine started")
+		}
 
 		log.Info("Started")
-
-		// ticker := time.NewTicker(20000 * time.Millisecond)
-		// go func() {
-		// 	for {
-		// 		select {
-		// 		case <-ticker.C:
-		// 			start := time.Now()
-		// 			registry.Gather()
-		// 			log.Infof("%v", time.Since(start))
-		// 		}
-		// 	}
-		// }()
 
 		log.Infof("Listen %s", viper.GetString("listen"))
 		log.Fatal(http.ListenAndServe(viper.GetString("listen"), nil))
