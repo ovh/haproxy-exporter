@@ -3,7 +3,8 @@ BUILD_DIR=build
 
 CC=go build
 GITHASH=$(shell git rev-parse HEAD)
-CFLAGS=-race -ldflags "-X github.com/runabove/haproxy-exporter/cmd.githash=$(GITHASH)"
+DFLAGS=-race
+CFLAGS=-ldflags "-X github.com/runabove/haproxy-exporter/cmd.githash=$(GITHASH)"
 
 rwildcard=$(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2) $(filter $(subst *,%,$2),$d))
 VPATH= $(BUILD_DIR)
@@ -11,6 +12,10 @@ VPATH= $(BUILD_DIR)
 .SECONDEXPANSION:
 
 build: haproxy-exporter.go $$(call rwildcard, ./cmd, *.go) $$(call rwildcard, ./core, *.go)
+	$(CC) $(DFLAGS) $(CFLAGS) -o $(BUILD_DIR)/haproxy-exporter haproxy-exporter.go
+
+.PHONY: release
+release: haproxy-exporter.go $$(call rwildcard, ./cmd, *.go) $$(call rwildcard, ./core, *.go)
 	$(CC) $(CFLAGS) -o $(BUILD_DIR)/haproxy-exporter haproxy-exporter.go
 
 .PHONY: lint
