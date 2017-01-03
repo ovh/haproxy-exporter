@@ -109,6 +109,15 @@ parameters: # Parameters definitions (Optional)
   flushPeriod: 10000 # Flush period (Optional, 10000)
 ```
 
+## Sample metrics
+```
+1483065169580915// haproxy.stats.eresp{pxname=80,svname=BACKEND,type=1} 41297
+1483065169580915// haproxy.stats.cli_abrt{pxname=80,svname=BACKEND,type=1} 1251859
+1483065169580915// haproxy.stats.bout{pxname=80,svname=BACKEND,type=1} 553018374845
+1483065169580915// haproxy.stats.scur{pxname=80,svname=BACKEND,type=1} 764
+1483065169580915// haproxy.stats.dreq{pxname=80,svname=BACKEND,type=1} 0
+```
+
 ## Contributing
 Instructions on how to contribute to HAProxy-Exporter are available on the [Contributing][Contributing] page.
 
