@@ -10,10 +10,36 @@ HAProxy-Exporter features:
  - **Versatile**: HAProxy-Exporter can flush metrics to files.
 
 ## Status
-HAProxy-Exporter is currently used at [OVH](https://www.ovh.com) to monitor thousands HAProxy.
+
+HAProxy-Exporter is currently used at [OVH](https://www.ovh.com) to monitor thousands of HAProxy instances.
 Do not worry about scalability ;)
 
+## Datapoints
+
+HAProxy-Exporter will automatically collect all metrics exposed by HAProxy on its
+control socket, including all frontends, bachends and individual servers. To help
+classify these metrics, HAProxy-Exporter will name is ``haproxy.stats.[METRIC_NAME]`` and
+automatically insert a timestamp with a resolution of a micro-second as well as 3 labels:
+
+- *``pxname``*: Proxy name. This is the string after ``frontend``, ``bakend`` and ``listen`` keywords in you HAProxy configuration.
+- *``svname``*: Service name. This 'BACKEND', 'FRONTEND' or the name of the ``server`` field for server metrics.
+- *``type``*: Type of the object. (0=frontend, 1=backend, 2=server, 3=socket/listener)
+
+Additional labels may be configured in the documentation. See below.
+
+*Sample metrics*
+```
+1483065169580915// haproxy.stats.eresp{pxname=80,svname=BACKEND,type=1} 41297
+1483065169580915// haproxy.stats.cli_abrt{pxname=80,svname=BACKEND,type=1} 1251859
+1483065169580915// haproxy.stats.bout{pxname=80,svname=BACKEND,type=1} 553018374845
+1483065169580915// haproxy.stats.scur{pxname=80,svname=BACKEND,type=1} 764
+1483065169580915// haproxy.stats.dreq{pxname=80,svname=BACKEND,type=1} 0
+```
+
+For more informations, please see HaProxy Managment Guide: http://cbonte.github.io/haproxy-dconv/1.7/management.html#9.1
+
 ## Building
+
 HAProxy-Exporter is pretty easy to build.
  - Clone the repository
  - Setup a minimal working config (see bellow)
@@ -107,15 +133,6 @@ parameters: # Parameters definitions (Optional)
   scrapeTimeout: 5000 # Stats fetch timeout (Optional, default: 5000)
   flushPath: /opt/beamium/sinks/warp- # Path to flush metrics + filename header (Optional, default: no flush)
   flushPeriod: 10000 # Flush period (Optional, 10000)
-```
-
-## Sample metrics
-```
-1483065169580915// haproxy.stats.eresp{pxname=80,svname=BACKEND,type=1} 41297
-1483065169580915// haproxy.stats.cli_abrt{pxname=80,svname=BACKEND,type=1} 1251859
-1483065169580915// haproxy.stats.bout{pxname=80,svname=BACKEND,type=1} 553018374845
-1483065169580915// haproxy.stats.scur{pxname=80,svname=BACKEND,type=1} 764
-1483065169580915// haproxy.stats.dreq{pxname=80,svname=BACKEND,type=1} 0
 ```
 
 ## Contributing
