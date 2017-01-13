@@ -21,7 +21,7 @@ control socket, including all frontends, bachends and individual servers. To hel
 classify these metrics, HAProxy-Exporter will name is ``haproxy.stats.[METRIC_NAME]`` and
 automatically insert a timestamp with a resolution of a micro-second as well as 3 labels:
 
-- *``pxname``*: Proxy name. This is the string after ``frontend``, ``bakend`` and ``listen`` keywords in you HAProxy configuration.
+- *``pxname``*: Proxy name. This is the string after ``frontend``, ``backend`` and ``listen`` keywords in you HAProxy configuration.
 - *``svname``*: Service name. This 'BACKEND', 'FRONTEND' or the name of the ``server`` field for server metrics.
 - *``type``*: Type of the object. (0=frontend, 1=backend, 2=server, 3=socket/listener)
 
@@ -127,12 +127,12 @@ labels: # Labels definitions (Optional)
 #### Parameters
 HAProxy-Exporter can be customized through parameters. See available parameters bellow:
 ``` yaml
-parameters: # Parameters definitions (Optional)
-  scanDuration: 1000 # Duration within all the sources should be scraped (Optional, default: 1000)
-  maxConcurrent: 200 # Max concurrent scrape allowed (Optional, default: 50)
-  scrapeTimeout: 5000 # Stats fetch timeout (Optional, default: 5000)
-  flushPath: /opt/beamium/sinks/warp- # Path to flush metrics + filename header (Optional, default: no flush)
-  flushPeriod: 10000 # Flush period (Optional, 10000)
+# parameters definitions (Optional)
+scanDuration: 1000 # Duration within all the sources should be scraped (Optional, default: 1000)
+maxConcurrent: 200 # Max concurrent scrape allowed (Optional, default: 50)
+scrapeTimeout: 5000 # Stats fetch timeout (Optional, default: 5000)
+flushPath: /opt/beamium/sinks/warp- # Path to flush metrics + filename header (Optional, default: no flush)
+flushPeriod: 10000 # Flush period (Optional, 10000)
 ```
 
 ## Contributing
