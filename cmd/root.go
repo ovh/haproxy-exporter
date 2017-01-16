@@ -145,9 +145,10 @@ var RootCmd = &cobra.Command{
 				for {
 					select {
 					case <-ticker.C:
-						path := fmt.Sprintf("%v%v%v", flushPath, time.Now().Unix(), ".metrics")
-						log.Debugf("Flush to file: %v", path)
-						file, err := os.Create(path)
+						// Write to tmp file
+						path := fmt.Sprintf("%v%v", flushPath, time.Now().Unix())
+						log.Debugf("Flush to file: %v%v", path, ".tmp")
+						file, err := os.Create(path + ".tmp")
 						if err != nil {
 							log.Errorf("Flush failed: %v", err)
 						}
@@ -158,6 +159,10 @@ var RootCmd = &cobra.Command{
 						}
 
 						file.Close()
+
+						// Move tmp file to metrics one
+						log.Debugf("Move to file: %v%v", path, ".metrics")
+						os.Rename(path+".tmp", path+".metrics")
 					}
 				}
 			}()
