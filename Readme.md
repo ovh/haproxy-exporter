@@ -23,17 +23,17 @@ automatically insert a timestamp with a resolution of a micro-second as well as 
 
 - *``pxname``*: Proxy name. This is the string after ``frontend``, ``backend`` and ``listen`` keywords in you HAProxy configuration.
 - *``svname``*: Service name. This 'BACKEND', 'FRONTEND' or the name of the ``server`` field for server metrics.
-- *``type``*: Type of the object. (0=frontend, 1=backend, 2=server, 3=socket/listener)
+- *``type``*: Type of the object. (frontend, backend, server, socket/listener)
 
 Additional labels may be configured in the documentation. See below.
 
 *Sample metrics*
 ```
-1483065169580915// haproxy.stats.eresp{pxname=80,svname=BACKEND,type=1} 41297
-1483065169580915// haproxy.stats.cli_abrt{pxname=80,svname=BACKEND,type=1} 1251859
-1483065169580915// haproxy.stats.bout{pxname=80,svname=BACKEND,type=1} 553018374845
-1483065169580915// haproxy.stats.scur{pxname=80,svname=BACKEND,type=1} 764
-1483065169580915// haproxy.stats.dreq{pxname=80,svname=BACKEND,type=1} 0
+1483065169580915// haproxy.stats.eresp{pxname=80,svname=BACKEND,type=backend} 41297
+1483065169580915// haproxy.stats.cli_abrt{pxname=80,svname=BACKEND,type=backend} 1251859
+1483065169580915// haproxy.stats.bout{pxname=80,svname=BACKEND,type=backend} 553018374845
+1483065169580915// haproxy.stats.scur{pxname=80,svname=BACKEND,type=backend} 764
+1483065169580915// haproxy.stats.dreq{pxname=80,svname=BACKEND,type=backend} 0
 ```
 
 For more informations, please see HaProxy Managment Guide: http://cbonte.github.io/haproxy-dconv/1.7/management.html#9.1
