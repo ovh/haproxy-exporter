@@ -260,7 +260,19 @@ func (e *Exporter) Scrape() bool {
 					}
 				}
 
-				gts := now + e.metrics[fieldIdx] + "{" + e.labels + "pxname=" + *values[0] + ",svname=" + *values[1] + ",type=" + *values[32] + "} " + value + "\n"
+				t := ""
+				switch *values[32] {
+				case "0":
+					t = "frontend"
+				case "1":
+					t = "backend"
+				case "2":
+					t = "server"
+				case "3":
+					t = "listen"
+				}
+
+				gts := now + e.metrics[fieldIdx] + "{" + e.labels + "pxname=" + *values[0] + ",svname=" + *values[1] + ",type=" + t + "} " + value + "\n"
 				e.sensision.WriteString(gts)
 			}
 		} else {
