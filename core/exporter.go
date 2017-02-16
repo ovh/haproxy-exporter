@@ -272,7 +272,12 @@ func (e *Exporter) Scrape() bool {
 					t = "listen"
 				}
 
-				gts := now + e.metrics[fieldIdx] + "{" + e.labels + "pxname=" + *values[0] + ",svname=" + *values[1] + ",type=" + t + "} " + value + "\n"
+				gts := now + e.metrics[fieldIdx] + "{" + e.labels + "pxname=" + *values[0] + ",svname=" + *values[1] + ",type=" + t + "} "
+				if fieldIdx == 36 || fieldIdx == 37 || fieldIdx == 56 {
+					gts += "'" + value + "'\n"
+				} else {
+					gts += value + "\n"
+				}
 				e.sensision.WriteString(gts)
 			}
 		} else {
