@@ -89,8 +89,8 @@ func NewExporter(uri string, timeout time.Duration, labels map[string]string, me
 			33: "current_session_rate",
 			34: "limit_session_rate",
 			35: "max_session_rate",
-			// check_status
-			// check_code
+			36: "check_status",
+			37: "check_code",
 			38: "check_duration",
 			39: "hrsp_1xx",
 			40: "hrsp_2xx",
@@ -110,7 +110,7 @@ func NewExporter(uri string, timeout time.Duration, labels map[string]string, me
 
 			54: "comp_rsp",
 			55: "lastsess",
-			// last_chk
+			56: "last_chk",
 			// last_agt
 			58: "qtime",
 			59: "ctime",
