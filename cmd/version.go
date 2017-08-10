@@ -2,11 +2,12 @@ package cmd
 
 import (
 	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
 var (
-	version = "1.3.1"
+	version = "1.3.2"
 	githash = "HEAD"
 )
 

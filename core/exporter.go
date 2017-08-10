@@ -5,13 +5,14 @@ import (
 	// "encoding/csv"
 	"errors"
 	"fmt"
-	"github.com/gwenn/yacr"
 	"io"
 	"net"
 	"net/http"
 	"net/url"
 	"sync"
 	"time"
+
+	"github.com/gwenn/yacr"
 
 	log "github.com/Sirupsen/logrus"
 )
@@ -149,7 +150,14 @@ func (e *Exporter) Metrics() *bytes.Buffer {
 	e.mutex.RLock()
 	defer e.mutex.RUnlock()
 
-	return bytes.NewBuffer(e.sensision.Bytes())
+	var res = new(bytes.Buffer)
+	res.Grow(e.sensision.Len())
+	_, err := e.sensision.WriteTo(res)
+	if err != nil {
+		log.Error("Fail to copy buffer " + err.Error())
+	}
+
+	return res
 }
 
 func fetchHTTP(uri string, timeout time.Duration) func() (io.ReadCloser, error) {
