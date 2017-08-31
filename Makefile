@@ -4,7 +4,7 @@ BUILD_DIR=build
 CC=go build
 GITHASH=$(shell git rev-parse HEAD)
 DFLAGS=-race
-CFLAGS=-ldflags "-X github.com/runabove/haproxy-exporter/cmd.githash=$(GITHASH)"
+CFLAGS=-ldflags "-X github.com/ovh/haproxy-exporter/cmd.githash=$(GITHASH)"
 
 rwildcard=$(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2) $(filter $(subst *,%,$2),$d))
 VPATH= $(BUILD_DIR)

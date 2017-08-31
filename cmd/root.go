@@ -2,15 +2,15 @@ package cmd
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"net/http"
 
-	"github.com/runabove/haproxy-exporter/core"
+	"github.com/ovh/haproxy-exporter/core"
 )
 
 var cfgFile string

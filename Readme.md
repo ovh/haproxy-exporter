@@ -1,12 +1,12 @@
 # HAProxy-Exporter - HAProxy stats to Sensision Metrics
-[![Build Status](https://travis-ci.org/runabove/haproxy-exporter.svg?branch=master)](https://travis-ci.org/runabove/haproxy-exporter)
+[![Build Status](https://travis-ci.org/ovh/haproxy-exporter.svg?branch=master)](https://travis-ci.org/ovh/haproxy-exporter)
 
 HAProxy-Exporter scrapes HAProxy stats and expose them as a Sensision HTTP endpoint.
 
 HAProxy-Exporter features:
  - **Simple**: HAProxy-Exporter fetch stats through HTTP endpoint or Unix socket.
  - **Highly scalable**: HAProxy-Exporter can export stats of thousands HAProxy.
- - **Pluggable**: Export your metrics via [Beamium](https://github.com/runabove/beamium).
+ - **Pluggable**: Export your metrics via [Beamium](https://github.com/ovh/beamium).
  - **Versatile**: HAProxy-Exporter can flush metrics to files.
 
 ## Status
