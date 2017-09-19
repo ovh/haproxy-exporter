@@ -1,16 +1,8 @@
-hash: 8e8e9f0bb2da374292a2e9bbaa20127befcae3d341c1be6a3388804db454f01a
-updated: 2016-12-29T17:26:15.041460725-05:00
+hash: b4c6ed669a1b13abb92d62fbf87158446990f7eba02c3e33aa5b0b13122a15e9
+updated: 2017-09-19T13:06:34.387583635+02:00
 imports:
-- name: github.com/beorn7/perks
-  version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
-  subpackages:
-  - quantile
 - name: github.com/fsnotify/fsnotify
   version: fd9ec7deca8bf46ecd2a795baaacf2b3a9be1197
-- name: github.com/golang/protobuf
-  version: 8ee79997227bf9b34611aee7946ae64735e6fd93
-  subpackages:
-  - proto
 - name: github.com/gwenn/yacr
   version: 67f7471b9d0ac6ab53456b3892af9d91a7b18330
 - name: github.com/hashicorp/hcl
@@ -28,34 +20,14 @@ imports:
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/magiconair/properties
   version: 9c47895dc1ce54302908ab8a43385d1f5df2c11c
-- name: github.com/matttproud/golang_protobuf_extensions
-  version: c12348ce28de40eed0136aa2b644d0ee0650e56c
-  subpackages:
-  - pbutil
 - name: github.com/mitchellh/mapstructure
   version: 5a0325d7fafaac12dda6e7fb8bd222ec1b69875e
 - name: github.com/pelletier/go-buffruneio
   version: df1e16fde7fc330a0ca68167c23bf7ed6ac31d6d
 - name: github.com/pelletier/go-toml
   version: ce7be745f09fe4ff89af8e3ea744e1deabf20ee3
-- name: github.com/prometheus/client_golang
-  version: c5b7fccd204277076155f10851dad72b76a49317
-  subpackages:
-  - prometheus
-- name: github.com/prometheus/client_model
-  version: fa8ad6fec33561be4280a8f0514318c79d7f6cb6
-  subpackages:
-  - go
-- name: github.com/prometheus/common
-  version: 6d76b79f239843a04e8ad8dfd8fcadfa3920236f
-  subpackages:
-  - expfmt
-  - internal/bitbucket.org/ww/goautoneg
-  - model
-- name: github.com/prometheus/procfs
-  version: fcdb11ccb4389efb1b210b7ffb623ab71c5fdd60
 - name: github.com/Sirupsen/logrus
-  version: d26492970760ca5d33129d2d799e34be5c4782eb
+  version: ba1b36c82c5e05c4f912a88eab0dcd91a171688f
 - name: github.com/spf13/afero
   version: 2f30b2a92c0e5700bcfe4715891adb1f2a7a406d
   subpackages:

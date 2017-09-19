@@ -76,6 +76,7 @@ sources: # Sources definitions
       label_name : label_value # Label definition
   - uri: http://user:pass@haproxy.example.com/haproxy?stats;csv # HTTP with basic auth stats uri
   - uri: unix:/run/haproxy/admin.sock # Socket stats uri
+  - include: ./sources.d/.*.yaml # include sources from another file
 ```
 
 #### Metrics
