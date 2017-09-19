@@ -2,9 +2,14 @@ package cmd
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
+	"regexp"
 	"time"
+
+	yaml "gopkg.in/yaml.v2"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -69,9 +74,12 @@ func initConfig() {
 
 // Source defined a HAProxy stats source
 type Source struct {
-	URI    string
-	Labels map[string]interface{}
+	Include string
+	URI     string
+	Labels  map[string]interface{}
 }
+
+var sources []Source
 
 // RootCmd launch the aggregator agent.
 var RootCmd = &cobra.Command{
@@ -81,12 +89,18 @@ var RootCmd = &cobra.Command{
 		log.Info("HAProxy exporter starting")
 
 		// Load sources
-		var sources []Source
-		if err := viper.UnmarshalKey("sources", &sources); err != nil {
+		var sConf []Source
+		if err := viper.UnmarshalKey("sources", &sConf); err != nil {
 			log.Fatalf("Unable to decode 'sources', %v", err)
 		}
 
-		log.Info(sources)
+		for i := range sConf {
+			err := parseSource(sConf[i])
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+
 		if len(sources) == 0 {
 			log.Fatal("No sources defined, dying")
 		}
@@ -174,4 +188,75 @@ var RootCmd = &cobra.Command{
 		log.Infof("Listen %s", viper.GetString("listen"))
 		log.Fatal(http.ListenAndServe(viper.GetString("listen"), nil))
 	},
+}
+
+type sourceWalker struct {
+	pattern *regexp.Regexp
+}
+
+func parseSource(s Source) error {
+	// Not an include entry
+	if s.Include == "" {
+		sources = append(sources, s)
+		return nil
+	}
+
+	if s.URI != "" || len(s.Labels) != 0 {
+		return fmt.Errorf("include sources should be pure: %s", s.Include)
+	}
+
+	// We got an include entry
+	rg, err := regexp.Compile(filepath.Base(s.Include))
+	if err != nil {
+		return err
+	}
+
+	// Build worker
+	w := sourceWalker{
+		pattern: rg,
+	}
+
+	// Load sources from matchimg files
+	err = filepath.Walk(filepath.Dir(s.Include), w.walkSource)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *sourceWalker) walkSource(path string, info os.FileInfo, err error) error {
+	if err != nil {
+		return err
+	}
+
+	// Skip dirs
+	if info.IsDir() {
+		return nil
+	}
+
+	// Valid source file?
+	if !s.pattern.MatchString(filepath.Base(path)) {
+		return nil
+	}
+
+	// Parse source file
+	var srcs []Source
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	err = yaml.Unmarshal([]byte(data), &srcs)
+	if err != nil {
+		return fmt.Errorf("%s should contain an array of source", path)
+	}
+
+	// Process each source
+	for i := range srcs {
+		err := parseSource(srcs[i])
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
