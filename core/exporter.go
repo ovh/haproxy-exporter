@@ -203,20 +203,13 @@ func fetchUnix(u *url.URL, timeout time.Duration) func() (io.ReadCloser, error) 
 	}
 }
 
-// clear reset all the metrics
-func (e *Exporter) clear() {
-	// protect consistency
-	e.mutex.Lock()
-	defer e.mutex.Unlock()
-	e.sensision.Reset()
-}
-
 // Scrape retrive HAProxy data
 func (e *Exporter) Scrape() bool {
 	body, err := e.fetch()
 
-	// Delete previous metrics
-	e.clear()
+	e.mutex.Lock()
+	defer e.mutex.Unlock()
+	e.sensision.Reset()
 
 	if err != nil {
 		return false
