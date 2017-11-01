@@ -11,7 +11,7 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -91,7 +91,7 @@ var RootCmd = &cobra.Command{
 		// Load sources
 		var sConf []Source
 		if err := viper.UnmarshalKey("sources", &sConf); err != nil {
-			log.Fatalf("Unable to decode 'sources', %v", err)
+			log.Fatalf("Unable to read 'sources', %v", err)
 		}
 
 		for i := range sConf {

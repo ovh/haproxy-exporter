@@ -14,7 +14,7 @@ import (
 
 	"github.com/gwenn/yacr"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
