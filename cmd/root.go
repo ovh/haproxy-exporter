@@ -11,7 +11,7 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -91,7 +91,7 @@ var RootCmd = &cobra.Command{
 		// Load sources
 		var sConf []Source
 		if err := viper.UnmarshalKey("sources", &sConf); err != nil {
-			log.Fatalf("Unable to decode 'sources', %v", err)
+			log.Fatalf("Unable to read 'sources', %v", err)
 		}
 
 		for i := range sConf {
@@ -138,7 +138,9 @@ var RootCmd = &cobra.Command{
 		http.Handle("/metrics", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			w.Write(b.Metrics().Bytes())
 			for _, e := range exporters {
+				e.Lock()
 				w.Write(e.Metrics().Bytes())
+				e.Unlock()
 			}
 		}))
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -169,7 +171,9 @@ var RootCmd = &cobra.Command{
 
 						file.Write(b.Metrics().Bytes())
 						for _, e := range exporters {
+							e.Lock()
 							file.Write(e.Metrics().Bytes())
+							e.Unlock()
 						}
 
 						file.Close()

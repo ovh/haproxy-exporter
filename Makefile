@@ -5,6 +5,7 @@ CC=go build
 GITHASH=$(shell git rev-parse HEAD)
 DFLAGS=-race
 CFLAGS=-ldflags "-X github.com/ovh/haproxy-exporter/cmd.githash=$(GITHASH)"
+CROSS=GOOS=linux GOARCH=amd64
 
 rwildcard=$(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2) $(filter $(subst *,%,$2),$d))
 VPATH= $(BUILD_DIR)
@@ -17,6 +18,10 @@ build: haproxy-exporter.go $$(call rwildcard, ./cmd, *.go) $$(call rwildcard, ./
 .PHONY: release
 release: haproxy-exporter.go $$(call rwildcard, ./cmd, *.go) $$(call rwildcard, ./core, *.go)
 	$(CC) $(CFLAGS) -o $(BUILD_DIR)/haproxy-exporter haproxy-exporter.go
+
+.PHONY: dist
+dist: haproxy-exporter.go $(MODULES_PATH)
+	$(CROSS) $(CC) $(CFLAGS) -ldflags "-s -w" -o $(BUILD_DIR)/haproxy-exporter haproxy-exporter.go
 
 .PHONY: lint
 lint:

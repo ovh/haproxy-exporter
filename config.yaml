@@ -1,5 +1,23 @@
 sources:
-  - uri: unix:/run/haproxy/admin.sock
+  - include: ./sources.d/.*.yaml
+  - uri: unix:/srv/iplb/11622/chroot/run/proc_1.sock
+    labels:
+      allnics: '|ib8368-ovh|'
+      iplb: '5405276'
+      offer: 'legacy'
+      ovh.bu: 'none'
+      slot: '11622'
+      socket: '1'
+      zone: 'gra'
+  - uri: unix:/srv/iplb/11622/chroot/run/proc_2.sock
+    labels:
+      allnics: '|ib8368-ovh|'
+      iplb: '5405276'
+      offer: 'legacy'
+      ovh.bu: 'none'
+      slot: '11622'
+      socket: '2'
+      zone: 'gra'
 
 metrics:
   - qcur

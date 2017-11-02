@@ -14,7 +14,7 @@ import (
 
 	"github.com/gwenn/yacr"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -145,19 +145,19 @@ func NewExporter(uri string, timeout time.Duration, labels map[string]string, me
 	return e, nil
 }
 
+// Lock exporter for read
+func (e *Exporter) Lock() {
+	e.mutex.RLock()
+}
+
+// Unlock exporter for read
+func (e *Exporter) Unlock() {
+	e.mutex.RUnlock()
+}
+
 // Metrics delivers HAProxy stats as warp10 metrics.
 func (e *Exporter) Metrics() *bytes.Buffer {
-	e.mutex.RLock()
-	defer e.mutex.RUnlock()
-
-	var res = new(bytes.Buffer)
-	res.Grow(e.sensision.Len())
-	_, err := e.sensision.WriteTo(res)
-	if err != nil {
-		log.Error("Fail to copy buffer " + err.Error())
-	}
-
-	return res
+	return &e.sensision
 }
 
 func fetchHTTP(uri string, timeout time.Duration) func() (io.ReadCloser, error) {
@@ -203,31 +203,24 @@ func fetchUnix(u *url.URL, timeout time.Duration) func() (io.ReadCloser, error) 
 	}
 }
 
-// clear reset all the metrics
-func (e *Exporter) clear() {
-	// protect consistency
-	e.mutex.Lock()
-	defer e.mutex.Unlock()
-	e.sensision.Reset()
-}
-
 // Scrape retrive HAProxy data
 func (e *Exporter) Scrape() bool {
 	body, err := e.fetch()
 
-	// Delete previous metrics
-	e.clear()
+	e.mutex.Lock()
+	defer e.mutex.Unlock()
+	e.sensision.Reset()
 
 	if err != nil {
+		log.WithFields(log.Fields{
+			"uri":   e.URI,
+			"error": err,
+		}).Error("Scrape failed")
 		return false
 	}
 	defer body.Close()
 
 	now := fmt.Sprintf("%v// haproxy.stats.", time.Now().UnixNano()/1000)
-
-	// protect consistency
-	e.mutex.Lock()
-	defer e.mutex.Unlock()
 
 	r := yacr.DefaultReader(body)
 	r.SkipRecords(1) // first line is comment
@@ -286,14 +279,24 @@ func (e *Exporter) Scrape() bool {
 				} else {
 					gts += value + "\n"
 				}
-				e.sensision.WriteString(gts)
+				_, err := e.sensision.WriteString(gts)
+				if err != nil {
+					log.WithFields(log.Fields{
+						"uri":   e.URI,
+						"error": err,
+					}).Error("Write failed")
+					return false
+				}
 			}
 		} else {
 			i++
 		}
 	}
 	if err := r.Err(); err != nil {
-		fmt.Println(err)
+		log.WithFields(log.Fields{
+			"uri":   e.URI,
+			"error": err,
+		}).Error("Parse failed")
 	}
 
 	return true
